@@ -76,6 +76,4 @@ async def list_scripts(request: Request):
 
 
 if __name__ == '__main__':
-    uvicorn.run(
-        'main:app', host='localhost', port=8000, log_level='debug', reload=False
-    )
+    uvicorn.run('main:app', host='localhost', port=8000, log_level='debug', reload=True)

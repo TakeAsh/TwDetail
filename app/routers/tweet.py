@@ -22,6 +22,7 @@ reg_id_only = re.compile(r'^(\d+)$')
 reg_url = re.compile(r'status/(\d+)')
 reg_photo_ext = re.compile(r'\.([^.]+)$')
 reg_video_ext = re.compile(r'\.([^.?]+)(\?|$)')
+path_log = join(dirname(abspath(__file__)), '../../log/tweets.json')
 
 
 def get_status_id(url: str) -> str:
@@ -163,7 +164,7 @@ def get_details_by_ids(urls: list[str]):
     print(f"rate_limit: {scraper.rate_limit}")
     try:
         tweets = scraper.tweets_by_id(ids)
-        if 'rate_limit' in scraper:
+        if scraper.rate_limit:
             print(f"rate_limit: {scraper.rate_limit}")
             if len(tweets) == 0 and scraper.rate_limit.remaining == 0:
                 raise HTTPException(
@@ -171,7 +172,7 @@ def get_details_by_ids(urls: list[str]):
                     detail='Too Many Requests',
                     headers={'Retry-After': scraper.rate_limit.wait},
                 )
-        with open(join(dirname(abspath(__file__)), '../../log/tweets.json'), 'wt') as f:
+        with open(path_log, 'wt') as f:
             f.write(json.dumps(tweets, indent=2))
         details = {
             tweet['rest_id']: Detail(tweet)
