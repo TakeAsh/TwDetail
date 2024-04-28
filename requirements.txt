@@ -1,0 +1,5 @@
+﻿fastapi[all]
+python-multipart
+python-jose[cryptography]
+bcrypt
+python-dotenv

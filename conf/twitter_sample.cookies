@@ -1,0 +1,15 @@
+{
+  "email": "twdetail@example.com",
+  "username": "twdetail",
+  "password": "my_password",
+  "guest_token": "my_guest_token",
+  "flow_token": "my_flow_token",
+  "guest_id_marketing": "my_guest_id_marketing",
+  "guest_id_ads": "my_guest_id_ads",
+  "personalization_id": "my_personalization_id",
+  "guest_id": "my_guest_id",
+  "kdt": "my_kdt",
+  "twid": "my_twid",
+  "ct0": "my_ct0",
+  "auth_token": "my_auth_token"
+}

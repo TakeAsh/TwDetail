@@ -1,0 +1,16 @@
+[Unit]
+Description=TwDetail service
+#Before=nginx.service
+After=network.target
+
+[Service]
+User=apache
+Group=apache
+WorkingDirectory=/path/to/TwDetail/app
+ExecStart=/usr/bin/python3 ./main.py
+ExecReload=/usr/bin/kill -s HUP $MAINPID
+ExecStop=/usr/bin/kill -s TERM $MAINPID
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
