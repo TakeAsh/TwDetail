@@ -26,7 +26,7 @@ app_path = dirname(abspath(__file__))
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['https://twitter.com'],
+    allow_origins=['https://x.com', 'https://twitter.com'],
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
