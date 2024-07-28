@@ -1,15 +1,34 @@
 ﻿import re
 import json
 import html
+import time
+from datetime import datetime
+from dateutil import tz
 from os.path import dirname, abspath, join
 from functools import reduce
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from dependencies import (
     User,
     oauth2_scheme,
     get_current_active_user,
     get_scraper,
 )
+
+
+class RateLimits:
+    def __init__(self, limits: dict):
+        limits = limits.get('TweetResultByRestId', {})
+        print(f"limits: {limits}")
+        current_time = int(time.time())
+        self.limit = int(limits.get('x-rate-limit-limit', 50))
+        self.reset = int(limits.get('x-rate-limit-reset', current_time + 15 * 60))
+        self.reset_local = datetime.fromtimestamp(self.reset, tz.tzlocal()).isoformat()
+        self.remaining = int(limits.get('x-rate-limit-remaining', 50))
+        self.wait = self.reset - current_time
+
+    def __str__(self) -> str:
+        return json.dumps(vars(self))
+
 
 router = APIRouter(
     prefix='/tweet',
@@ -158,20 +177,20 @@ def get_tweet(data):
 
 
 @router.post('/details')
-def get_details_by_ids(urls: list[str]):
+def get_details_by_ids(urls: list[str], response: Response):
     ids = [get_status_id(url) for url in urls]
     scraper = get_scraper()
-    print(f"rate_limit: {scraper.rate_limit}")
+    limits = RateLimits(scraper.rate_limits)
+    print(f"rate_limits: {limits}")
+    response.headers['x-rate-limits'] = f"{limits}"
     try:
         tweets = scraper.tweets_by_id(ids)
-        if scraper.rate_limit:
-            print(f"rate_limit: {scraper.rate_limit}")
-            if len(tweets) == 0 and scraper.rate_limit.remaining == 0:
-                raise HTTPException(
-                    status_code=429,
-                    detail='Too Many Requests',
-                    headers={'Retry-After': scraper.rate_limit.wait},
-                )
+        if len(tweets) == 0 and limits.remaining == 0:
+            raise HTTPException(
+                status_code=429,
+                detail='Too Many Requests',
+                headers={'Retry-After': limits.reset_local},
+            )
         with open(path_log, 'wt') as f:
             f.write(json.dumps(tweets, indent=2))
         details = {
@@ -182,3 +201,11 @@ def get_details_by_ids(urls: list[str]):
     except Exception as e:
         print(e)
         return e
+
+
+@router.get('/rate_limits')
+def get_rate_limits(response: Response):
+    scraper = get_scraper()
+    limits = RateLimits(scraper.rate_limits)
+    response.headers['x-rate-limits'] = f"{limits}"
+    return limits

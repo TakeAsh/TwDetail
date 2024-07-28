@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         TwDetail
 // @namespace    https://www.TakeAsh.net/
-// @version      2024-04-28_18:31
+// @version      2024-07-29_01:30
 // @description  Enhance twitter
 // @author       TakeAsh
 // @match        https://twitter.com/*
@@ -25,12 +25,22 @@
   //console.log(conf);
   const regStatusId = /\/status\/(?<id>\d+)/;
   const details = {};
+  let limits = {};
   await sleep(5 * 1000);
   addStyle({
     '.buttonTwDetail': {
       margin: '0em 0em 0em 0.4em',
     },
+    '#TwDetail_Message': {
+      position: 'fixed', top: '0em', right: '0em', color: '#ff0000',
+    },
   })
+  const message = prepareElement({
+    tag: 'div',
+    id: 'TwDetail_Message',
+    textContent: '',
+  });
+  d.body.appendChild(message);
   const target = getNodesByXpath('//section[@role="region"]/div/div')[0];
   if (!target) {
     console.log('No target');
@@ -68,18 +78,12 @@
       .filter(id => !details.hasOwnProperty(id));
     if (linkIds.length) {
       //console.log({ links: links, linkIds: linkIds });
+      message.textContent = limits.reset_local ? `${limits.remaining}/${limits.limit}, ${limits.reset_local}` : '';
       const subDetails = await getDetails(linkIds);
       if (subDetails) {
         Object.assign(details, subDetails);
       } else {
-        node.insertBefore(prepareElement(
-          {
-            tag: 'div',
-            textContent: 'Failed to login TwDetail',
-            style: { color: '#ff0000', },
-          }),
-          node.firstChild
-        );
+        message.textContent = 'Failed to login TwDetail' + (limits.reset_local ? ` (reset: ${limits.reset_local})` : '');
         return;
       }
     }
@@ -151,6 +155,7 @@
       body: JSON.stringify(linkIds),
     });
     const result = await response.json();
+    await getLimits(session);
     if (!result) {
       console.log(`Failed to fetch at 'getDetails'`);
       return null;
@@ -162,6 +167,20 @@
       return null;
     }
     return result;
+  }
+
+  async function getLimits(session) {
+    const response = await fetch(`${conf.uriApi}tweet/rate_limits`, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+    limits = await response.json();
+    console.log(limits);
   }
 
   async function getSession() {
