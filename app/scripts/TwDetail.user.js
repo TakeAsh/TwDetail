@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         TwDetail
 // @namespace    https://www.TakeAsh.net/
-// @version      2024-07-29_01:30
+// @version      2025-04-18_04:30
 // @description  Enhance twitter
 // @author       TakeAsh
 // @match        https://twitter.com/*
@@ -30,6 +30,9 @@
   addStyle({
     '.buttonTwDetail': {
       margin: '0em 0em 0em 0.4em',
+      backgroundColor: 'lightgray',
+      borderWidth: 'initial',
+      borderStyle: 'revert',
     },
     '#TwDetail_Message': {
       position: 'fixed', top: '0em', right: '0em', color: '#ff0000',
