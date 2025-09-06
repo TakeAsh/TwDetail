@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         TwDetail
 // @namespace    https://www.TakeAsh.net/
-// @version      2025-04-18_04:30
+// @version      2025-09-07_07:30
 // @description  Enhance twitter
 // @author       TakeAsh
 // @match        https://twitter.com/*
@@ -16,6 +16,7 @@
 (async (w, d) => {
   'use strict';
   const keyStorage = 'TwDetail';
+  const spanCheckTarget = 30 * 1000;
   //initConf('https://api.example.com/', 'my_name', 'my_password');
   if (!localStorage[keyStorage]) {
     console.error('config not saved')
@@ -26,7 +27,7 @@
   const regStatusId = /\/status\/(?<id>\d+)/;
   const details = {};
   let limits = {};
-  await sleep(5 * 1000);
+  await sleep(1 * 1000);
   addStyle({
     '.buttonTwDetail': {
       margin: '0em 0em 0em 0.4em',
@@ -44,7 +45,14 @@
     textContent: '',
   });
   d.body.appendChild(message);
-  const target = getNodesByXpath('//section[@role="region"]/div/div')[0];
+  const limitCheckTarget = Date.now() + spanCheckTarget;
+  let target = null;
+  while (
+    (target = getNodesByXpath('//section[@role="region"]/div/div')[0]) == null
+    && Date.now() < limitCheckTarget
+  ) {
+    await sleep(500);
+  }
   if (!target) {
     console.log('No target');
     return;
