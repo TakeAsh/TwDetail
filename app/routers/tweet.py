@@ -41,6 +41,7 @@ reg_id_only = re.compile(r'^(\d+)$')
 reg_url = re.compile(r'status/(\d+)')
 reg_photo_ext = re.compile(r'\.([^.]+)$')
 reg_video_ext = re.compile(r'\.([^.?]+)(\?|$)')
+reg_ad = re.compile(r'adpcnt=[^&]+')  # BookWalker
 path_log = join(dirname(abspath(__file__)), '../../log/tweets.json')
 
 
@@ -93,7 +94,11 @@ def get_urls(tweet):
         urls += legacy['extended_entities']['urls']
     if 'entities' in legacy and 'urls' in legacy['entities']:
         urls += legacy['entities']['urls']
-    return {url['url']: url['expanded_url'] for url in urls} if urls else None
+    return (
+        {url['url']: reg_ad.sub('', url['expanded_url']) for url in urls}
+        if urls
+        else None
+    )
 
 
 def get_info_photo(media):
